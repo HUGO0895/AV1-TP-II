@@ -5,7 +5,9 @@ import { Papel } from "../Enum/papel";
 import RecomendacaoStrategy from "../../Strategy/RecomendacaoStrategy"
 export default abstract class OrquestradorEquipe{
        orquestrar(projeto:Projeto,estrategia:RecomendacaoStrategy):Equipe{
-        
+                   this.validarRestricoes()
+                   this.normalizarDados()
+                   estrategia.recomendar(projeto,)
        }
 
        abstract  validarRestricoes(projeto:Projeto):boolean;
