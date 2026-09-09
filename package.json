@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migration:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/InitialSchema -d src/ConecBanco.ts"
+ 
+  "typeorm": "ts-node ./node_modules/typeorm/cli.js -d src/ConecBanco.ts"
+
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "fastify": "^5.12.1",
+    "javascript-lp-solver": "^1.0.3",
     "jsonwebtoken": "^9.0.3",
     "nodemon": "^3.1.14",
     "pg": "^8.23.0",

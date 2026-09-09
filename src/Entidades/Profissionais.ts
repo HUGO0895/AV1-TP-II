@@ -1,6 +1,8 @@
 import { Entity,PrimaryGeneratedColumn,Column, OneToMany} from "typeorm";
 import { Competencias } from "./Competencias";
 import { Avaliacao } from "./Avaliacao";
+import { RecomendacaoProfissionais } from "./RecomendacaoProfissionais";
+import { CompetenciasProfissionais } from "./CompetenciaProfissional";
 
 
 
@@ -12,8 +14,8 @@ export class Profissional{
      @Column({nullable:false})
      nome:string
 
-     @OneToMany(()=>Competencias,(Competencias)=>Competencias.profissional,{eager:true})
-     competencias:Competencias
+     @OneToMany(()=>CompetenciasProfissionais,(CompetenciasProfissionais)=>CompetenciasProfissionais.profissional,{eager:true})
+     competencias:CompetenciasProfissionais[]
 
      @Column({nullable:false})
      disponibilidadeInicio:Date
@@ -24,8 +26,11 @@ export class Profissional{
      @Column({nullable:false})
      precoMedio:number
      
-     @OneToMany(()=>Avaliacao,(Avaliacao)=>Avaliacao.profissional)
-     avaliacao:Avaliacao
+     @OneToMany(()=>Avaliacao,(Avaliacao)=>Avaliacao.profissional,{eager:true})
+     avaliacao:Avaliacao[]
+
+     @OneToMany(()=>RecomendacaoProfissionais,(RecomendacaoProfissionais)=>RecomendacaoProfissionais.profissional)
+     recomendacao:RecomendacaoProfissionais[]
 
 
 

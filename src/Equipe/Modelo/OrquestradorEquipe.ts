@@ -1,20 +1,21 @@
 import Equipe from "./equipe";
-import Projeto from '../../Projetos/Modelo/projetos'
+import Projeto from '../../Projetos/Modelo/projetos';
 import Profissional from "./Profissional";
 import { Papel } from "../Enum/papel";
 import RecomendacaoStrategy from "../../Strategy/RecomendacaoStrategy"
 export default abstract class OrquestradorEquipe{
-       orquestrar(projeto:Projeto,estrategia:RecomendacaoStrategy):Equipe{
-                   this.validarRestricoes()
-                   this.normalizarDados()
-                   estrategia.recomendar(projeto,)
+       orquestrar(projeto:Projeto,estrategia:RecomendacaoStrategy,profissionais:Array<Profissional>):Equipe{
+                  if (!this.validarRestricoes(projeto)){
+                     throw new Error("O projeto não possui competencias")
+                  }
+                   const equipe=this.normalizarDados(estrategia.recomendar(projeto,profissionais))
+                    this.posProcessar(equipe)
+                   return equipe
        }
 
        abstract  validarRestricoes(projeto:Projeto):boolean;
 
-       abstract normalizarDados(projeto:Projeto):Array<Profissional>;
+       abstract normalizarDados(profissionais:Map<Papel,Profissional>):Equipe;
 
-       abstract posProcessar(recomendacoes:Map<Papel,Profissional>):Map<Papel,Profissional>;
-
-
+       abstract posProcessar(recomendacao:Equipe):void;
 }

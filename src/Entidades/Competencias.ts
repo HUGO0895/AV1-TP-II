@@ -1,5 +1,6 @@
-import { Entity,PrimaryGeneratedColumn,Column, ManyToOne} from "typeorm";
+import { Entity,PrimaryGeneratedColumn,Column, ManyToOne, OneToMany} from "typeorm";
 import { Profissional } from "./Profissionais";
+import { CompetenciasProfissionais } from "./CompetenciaProfissional";
 
 
 @Entity()
@@ -8,13 +9,12 @@ export class Competencias{
     @PrimaryGeneratedColumn()
     id:number 
     
-    @Column({nullable:false})
+    @Column({nullable:false,unique:true})
     nome:string 
 
-    @Column({nullable:false})
-    nivel:number
+    @OneToMany(()=>CompetenciasProfissionais,(CompetenciasProfissionais)=>CompetenciasProfissionais.competencia)
+    competenciasProfssionais:CompetenciasProfissionais[]
 
-    @ManyToOne(()=>Profissional,(Profissional)=>Profissional.competencias)
-    profissional:Profissional
+
 
 }
