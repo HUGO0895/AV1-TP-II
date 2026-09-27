@@ -8,9 +8,10 @@ um **projeto audiovisual**, a partir de diferentes estratégias de recomendaçã
 O projeto foi construído como estudo de padrões de projeto (GoF): **Strategy**,
 **Observer**, **Visitor**, **Template Method** e **Repository**.
 
-> 📄 Para detalhes sobre a suíte de testes automatizados criada para este repositório
-> (o que é coberto, como rodar e bugs encontrados durante a escrita dos testes), veja
-> [`docs/TESTES.md`](docs/TESTES.md).
+> 📄 Detalhes sobre a suíte de testes automatizados (o que cada arquivo cobre, como
+> rodar e bugs encontrados durante a escrita dos testes) estão na seção
+> [Como rodar os testes](#como-rodar-os-testes) e em
+> [Limitações e bugs conhecidos](#limitações-e-bugs-conhecidos).
 
 ---
 
@@ -139,14 +140,82 @@ npm run test:coverage   # roda com relatório de cobertura
 ```
 
 Os testes **não** dependem de Postgres — eles trabalham só com os modelos de domínio
-em memória. Veja [`docs/TESTES.md`](docs/TESTES.md) para a lista completa do que é
-coberto e por quê.
+em memória, montados via fábricas (`src/__tests__/helpers/factories.ts`).
 
 > ⚠️ Arquivos auxiliares de teste (fábricas em `helpers/factories.ts`, mocks em
 > `DadosMock/`) precisam ficar **fora** de qualquer pasta chamada `__tests__`, ou
 > configurados em `testMatch` no `jest.config.js` (ex.: `"**/__tests__/**/*.test.ts"`).
 > Caso contrário o Jest tenta executá-los como suíte de teste e falha com
 > `"Your test suite must contain at least one test"`.
+
+### O que cada arquivo de teste cobre
+
+**`helpers/factories.ts`** — não é um teste, é o suporte usado por todos os outros.
+Expõe `novoProfissional`, `novoProjeto`, `novaAvaliacao` e `novaCompetencia`.
+`novoProjeto` recebe `competenciasPorPapel` (um `Partial<Record<Papel, Competencias[]>>`)
+e monta internamente um `Map` de verdade (`new Map(Object.entries(...))`), que é o
+formato que `Projeto.competencias` espera em tempo de execução (ver item 3 dos
+[bugs conhecidos](#limitações-e-bugs-conhecidos)).
+> 📝 O comentário no topo do arquivo ainda descreve a versão antiga do problema
+> (dizia que as estratégias tratavam `competencias` como objeto comum). Está
+> desatualizado e deveria ser reescrito ou removido, já que o código logo abaixo
+> já constrói um `Map` corretamente.
+
+**`SimiliaridadeCosseno.test.ts`** — cobre a estratégia de similaridade de
+competências: (1) para cada papel do projeto, escolhe o profissional cuja
+competência tem maior similaridade de cosseno com a exigida; (2) garante que um
+mesmo profissional não é escolhido para dois papéis diferentes, mesmo sendo o
+melhor candidato para ambos (o segundo melhor fica com o papel restante).
+
+**`FiltragemColaborativa.test.ts`** — cobre a estratégia baseada em avaliações
+históricas: (1) escolhe, por papel, o profissional com maior média de notas
+naquele papel; (2) garante que não recomenda o mesmo profissional para papéis
+diferentes quando há candidatos suficientes para cada um.
+
+**`RegrasOrcamento.test.ts`** — cobre a estratégia de otimização via
+`javascript-lp-solver`: (1) preenche **apenas os papéis presentes em
+`projeto.competencias`**, nunca todos os valores do enum `Papel` (teste corrigido
+depois de identificarmos que a expectativa original estava errada — ver item 3 dos
+bugs conhecidos); (2) nunca escolhe uma equipe cujo custo total ultrapasse
+`projeto.orcamento`; (3) nunca aloca o mesmo profissional em mais de um papel,
+mesmo quando ele é o único candidato disponível para vários papéis pedidos;
+(4) com o typo `optmize`→`optimize` corrigido, confirma que o solver realmente
+maximiza a nota (escolhe o profissional com melhor avaliação em vez de "a
+primeira solução viável").
+
+**`OrquestradorPadrao.test.ts`** (Template Method) — cobre `orquestrar`: (1) monta
+uma `Equipe` com status `"formada"` a partir do resultado da estratégia informada,
+com cada membro marcado como confirmado; (2) confirma que a etapa de
+pós-processamento loga `"Processando:"` após montar a equipe; (3) lança erro com a
+mensagem `"O projeto não possui competencias"` quando um objeto sem essa
+propriedade é passado; (4) documenta explicitamente, com o teste nomeado **"BUG
+CONHECIDO"**, que `validarRestricoes` retorna `true` para uma instância real de
+`Projeto` mesmo sem competências definidas — o campo existe no objeto (só o valor é
+`undefined`), então a checagem `'competencias' in projeto` não pega esse caso, e o
+`TypeError` só aparece depois, dentro da estratégia (ver item 2 dos bugs conhecidos,
+ainda em aberto).
+
+**`SistemaRecomendacao.test.ts`** (Facade) — cobre `executarEstrategia`: (1) monta a
+equipe usando a estratégia definida e notifica os observadores registrados, com o
+`EventoRecomendacao` carregando tipo, origem e os dados corretos; (2) confirma que
+os três observadores padrão (email, interno, auditoria) são notificados via
+`console.log`; (3) garante que `adicionarObeservador` permite plugar novos
+observadores sem afetar os já existentes (cada um é chamado exatamente uma vez).
+
+**`Observadores.test.ts`** — cobre os três observadores concretos isoladamente:
+`NotificadorEmail` loga uma mensagem por membro da equipe (contendo o nome do
+profissional), `NotificadorInterno` loga o envio aos "serviços internos", e
+`AuditoriaRecomendacao` loga a origem do evento (`"Origem:..."`).
+
+**`Visitors.test.ts`** — cobre os três visitantes:
+- `CalculadorCompatibilidade`: média (arredondada para baixo) das notas de um
+  profissional, e a mesma média por membro ao visitar um projeto com equipe formada.
+- `GeradorRelatorio`: o texto gerado para um profissional inclui nome, preço médio
+  e contagem de competências/avaliações; para um projeto, inclui tipo, gênero e
+  orçamento.
+- `ValidadorConscistencia`: retorna `true`/`false` conforme o profissional tem ou
+  não competências cadastradas, e conforme o projeto tem ou não uma equipe com
+  membros.
 
 ## API HTTP
 
@@ -191,8 +260,8 @@ Erros de validação/execução retornam `400 { "status": "error" }`.
 
 ## Limitações e bugs conhecidos
 
-Encontrados durante a leitura do código e a escrita dos testes (documentados também
-em `docs/TESTES.md`). Status atualizado conforme o que já foi corrigido:
+Encontrados durante a leitura do código e a escrita dos testes. Status atualizado
+conforme o que já foi corrigido:
 
 1. **`RegrasOrcamento` não maximiza a pontuação de fato — 🔧 correção identificada, pendente de aplicar.**
    O modelo passado para `javascript-lp-solver` usa a chave `optmize` (faltando um
@@ -220,9 +289,16 @@ em `docs/TESTES.md`). Status atualizado conforme o que já foi corrigido:
    `RegrasOrcamento` já respeita isso (`for (const papel of projeto.competencias.keys())`),
    preenchendo apenas os papéis pedidos, não todos os valores do enum `Papel`.
 
-4. **Schema da rota `POST /` usa `comepetencias`** (erro de digitação) em vez de
-   `competencias` em `recomendacaoController.ts` — ⚠️ ainda aberto. Esse campo do
-   corpo da requisição não é validado pelo Fastify como deveria.
+4. **Schema da rota `POST /` usava `comepetencias`** (erro de digitação) em vez de
+   `competencias` em `recomendacaoController.ts` — ✅ resolvido. O schema foi
+   corrigido para validar `competencias` no formato real (objeto indexado por
+   `Papel`, cada um com uma lista de `{nome, nivel}`). Também foi corrigido o
+   handler `RecomendacaoController.Recomendar`, que fazia `const projeto =
+   request.body` e tratava o JSON puro como se já fosse uma instância de
+   `Projeto` — em runtime isso deixava `competencias` como objeto comum, não
+   `Map` (mesma causa raiz do item 3, só que no fluxo real da API em vez dos
+   testes). Agora o handler constrói `new Map(Object.entries(body.competencias))`
+   e instancia `Projeto` explicitamente antes de repassar para a estratégia.
 
 5. **`kdkdk.py`, na raiz do repositório, contém uma API key exposta em texto
    puro** (usada supostamente para `openrouteservice.org`) e não tem relação com o
