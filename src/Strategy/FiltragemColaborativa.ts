@@ -11,7 +11,7 @@ import RecomendacaoStrategy from "./RecomendacaoStrategy";
 export default class FiltragemColaborativa implements RecomendacaoStrategy{
     recomendar(projeto: Projeto, profissionais: Array<Profissional>): Map<Papel, Profissional> {
              const mapaEquipe=new Map<Papel,Profissional>
-             for(const competencia of Object.keys(projeto.competencias)){
+             for(const competencia of projeto.competencias.keys()){
                 if(mapaEquipe.size){
                       for(let chave of mapaEquipe.keys()){
                       

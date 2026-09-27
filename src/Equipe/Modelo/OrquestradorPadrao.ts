@@ -7,7 +7,7 @@ import Profissional from "./Profissional";
 
 export default class OrquestradorPadrao extends OrquestradorEquipe{
     validarRestricoes(projeto: Projeto): boolean {
-        return  'competencias' in projeto
+        return  !projeto.competencias || projeto.competencias.size<=0
     }
     normalizarDados(profissionais:Map<Papel,Profissional>):Equipe{
             let membrosEquipe:Array<MembroEquipe>=[]

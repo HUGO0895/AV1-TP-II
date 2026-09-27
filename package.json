@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
- 
-  "typeorm": "ts-node ./node_modules/typeorm/cli.js -d src/ConecBanco.ts"
-
+    "typeorm": "ts-node ./node_modules/typeorm/cli.js -d src/ConecBanco.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +13,12 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/cors": "^2.8.19",
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "globals": "^17.4.0",
+    "jest": "^30.5.1",
+    "jest-mock-extended": "^4.0.1",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0"

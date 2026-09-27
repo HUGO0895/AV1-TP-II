@@ -9,13 +9,13 @@ import RecomendacaoStrategy from "./RecomendacaoStrategy";
 export default class SimiliaridadeCosseno implements RecomendacaoStrategy{
     recomendar(projeto: Projeto, profissionais: Array<Profissional>): Map<Papel, Profissional> {
                 const mapaEquipe=new Map<Papel,Profissional>
-                 for(let x of Object.keys(projeto.competencias)){
+                 for(let x of projeto.competencias.keys()){
                     if(mapaEquipe.size){
                       for(let chave of mapaEquipe.keys()){
                       profissionais=profissionais.filter((profissional)=>JSON.stringify(mapaEquipe.get(chave))!==JSON.stringify(profissional))
                       }
                     }
-                    const profissional=this.melhorEscolhaParaCadaPapel(profissionais,projeto.competencias[x])
+                    const profissional=this.melhorEscolhaParaCadaPapel(profissionais,projeto.competencias.get(x))
                     mapaEquipe.set(x as Papel,profissional)
                  }
                  return mapaEquipe
