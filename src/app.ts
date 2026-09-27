@@ -1,5 +1,6 @@
 import "reflect-metadata"
 import fastify from "fastify";
+// Principe que nunca virou rei
 import { AppDataSource } from "./ConecBanco";
 import { Profissional } from "./Entidades/Profissionais";
 import { Competencias } from "./Entidades/Competencias";
